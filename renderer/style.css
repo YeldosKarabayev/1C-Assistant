@@ -240,6 +240,24 @@ body.screen-chat #screenConnect { display: none; }
 @keyframes blink { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* индикатор обработки запроса (в стиле Claude Code): пульсирующий значок + мерцающий текст + таймер */
+.thinking { display: inline-flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13.5px; }
+.thinking .th-glyph { color: var(--accent); font-size: 14px; line-height: 1; display: inline-block; animation: thPulse 1.3s ease-in-out infinite; }
+.thinking .th-label {
+  font-weight: 500;
+  background: linear-gradient(90deg, var(--ink-soft) 0%, var(--ink-soft) 30%, var(--ink) 50%, var(--ink-soft) 70%, var(--ink-soft) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  animation: thShimmer 1.7s linear infinite;
+}
+.thinking .th-timer { color: var(--ink-soft); opacity: .6; font-size: 12px; font-variant-numeric: tabular-nums; }
+@keyframes thPulse { 0%, 100% { transform: scale(1) rotate(0deg); opacity: .65; } 50% { transform: scale(1.28) rotate(90deg); opacity: 1; } }
+@keyframes thShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .thinking .th-glyph, .thinking .th-label { animation: none; }
+  .thinking .th-label { -webkit-text-fill-color: var(--ink-soft); color: var(--ink-soft); }
+}
+
 .err-msg { color: var(--err); background: rgba(220, 38, 38, .1); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; }
 
 .composer-wrap { flex: none; padding: 8px 18px 14px; }
