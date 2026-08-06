@@ -1,0 +1,61 @@
+{
+  "name": "onec-assistant",
+  "version": "0.1.18",
+  "description": "1С Ассистент — простой чат с вашей базой 1С на понятном языке",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "author": "YeldosKarabayev",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "kz.evrika.onec-assistant",
+    "productName": "1C Assistant",
+    "icon": "icon.ico",
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "renderer/**/*",
+      "skills/**/*",
+      "!**/*.map"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "YeldosKarabayev",
+        "repo": "1C-Assistant"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "1С Ассистент",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "artifactName": "1C-Assistant-Setup-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "electron-updater": "^6.8.9",
+    "exceljs": "^4.4.0"
+  }
+}

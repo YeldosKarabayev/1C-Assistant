@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';" />
+  <title>1С Ассистент</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="screen-connect">
+  <!-- Титульная панель -->
+  <header class="titlebar">
+    <div class="tb-brand">
+      <span class="tb-logo">1С</span>
+      <span class="tb-title">Ассистент</span>
+      <span class="tb-ver" id="appVer"></span>
+    </div>
+    <div class="tb-spacer"></div>
+    <div class="tb-win">
+      <button class="tb-btn" id="winMin" title="Свернуть">&#8211;</button>
+      <button class="tb-btn" id="winMax" title="Развернуть">&#9633;</button>
+      <button class="tb-btn tb-close" id="winClose" title="Закрыть">&#10005;</button>
+    </div>
+  </header>
+
+  <!-- ЭКРАН 1: подключение базы -->
+  <main class="connect" id="screenConnect">
+    <div class="connect-card">
+      <!-- Шаг 1 мастера: приветствие (только при первом запуске) -->
+      <div class="wizard-intro" id="wizardIntro" hidden>
+        <div class="connect-logo">1С</div>
+        <h1>Добро пожаловать!</h1>
+        <p class="connect-sub">Я помогу узнавать всё из вашей базы 1С — просто спрашивайте обычными словами.</p>
+        <ul class="wiz-points">
+          <li><span class="wp-ico">💬</span> «Сколько продали за месяц?» — и сразу ответ</li>
+          <li><span class="wp-ico">📊</span> Таблицы, графики и выгрузка в Excel</li>
+          <li><span class="wp-ico">🔒</span> Только чтение — данные в безопасности</li>
+        </ul>
+        <p class="wiz-note">Для начала подключим базу — это нужно сделать один раз.</p>
+        <div class="wiz-steps"><span class="ws-dot active"></span><span class="ws-dot"></span></div>
+        <button type="button" class="btn btn-primary" id="wizStart">Начать →</button>
+      </div>
+
+      <!-- Шаг 2 мастера / экран добавления базы: форма подключения -->
+      <div id="connectStep" hidden>
+      <div class="connect-logo">1С</div>
+      <h1 id="connectTitle">Подключение базы 1С</h1>
+      <p class="connect-sub">Введите данные доступа — их подскажет ваш 1С‑администратор.</p>
+      <div class="wiz-steps" id="connectSteps" hidden><span class="ws-dot"></span><span class="ws-dot active"></span></div>
+
+      <form id="connectForm" class="cform" autocomplete="off">
+        <label class="fld">
+          <span class="fld-label">Название <span class="opt">(необязательно)</span></span>
+          <input type="text" id="cName" placeholder="например: Бухгалтерия" />
+        </label>
+        <label class="fld">
+          <span class="fld-label">Адрес базы</span>
+          <input type="text" id="cUrl" placeholder="http://сервер/база/hs/rsv_data/mcp" required />
+        </label>
+        <div class="fld-row">
+          <label class="fld">
+            <span class="fld-label">Логин</span>
+            <input type="text" id="cUser" placeholder="ваш логин 1С" />
+          </label>
+          <label class="fld">
+            <span class="fld-label">Пароль</span>
+            <span class="pass-wrap">
+              <input type="password" id="cPass" placeholder="пароль" />
+              <button type="button" class="pass-eye" id="cPassEye" title="Показать">&#128065;</button>
+            </span>
+          </label>
+        </div>
+
+        <div class="connect-status" id="connectStatus"></div>
+
+        <div class="connect-actions">
+          <button type="submit" class="btn btn-primary" id="btnConnect">Проверить и подключиться</button>
+          <button type="button" class="btn btn-ghost" id="btnConnectCancel" hidden>Отмена</button>
+        </div>
+        <button type="button" class="link-help" id="helpWhere">Где взять эти данные?</button>
+        <div class="help-note" id="helpNote" hidden>
+          Адрес базы, логин и пароль — это доступ к HTTP‑сервису вашей 1С (RSV&nbsp;Data).
+          Их выдаёт администратор 1С вашей компании. Если не знаете — просто перешлите ему этот вопрос.
+        </div>
+      </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- ЭКРАН 2: чат (левый сайдбар + основная область, как в Claude/ChatGPT) -->
+  <main class="chat" id="screenChat" hidden>
+    <aside class="sidebar">
+      <div class="sb-head">
+        <span class="dot" id="baseDot"></span>
+        <select id="baseSwitch" class="base-switch" title="База"></select>
+      </div>
+      <button class="sb-new" id="btnNew">＋&nbsp; Новый чат</button>
+      <div class="sb-hist-label">История</div>
+      <div class="sb-hist" id="historyList"></div>
+      <button class="sb-settings" id="btnSettings">⚙&nbsp; Настройки</button>
+    </aside>
+
+    <div class="chat-main">
+      <div class="chat-scroll" id="chatScroll">
+        <div class="chat-col" id="chatCol">
+          <!-- приветственный экран -->
+          <div class="welcome" id="welcome">
+            <div class="welcome-logo">1С</div>
+            <h2 id="welcomeTitle">Чем помочь по базе?</h2>
+            <p class="welcome-sub">Спросите обычными словами — я загляну в базу и отвечу.</p>
+            <div class="chips" id="chips">
+              <button class="chip" data-q="Сколько мы продали за этот месяц?">Продажи за месяц</button>
+              <button class="chip" data-q="Покажи остатки товаров на складах.">Остатки на складах</button>
+              <button class="chip" data-q="Топ‑10 клиентов по выручке за последний квартал.">Топ клиентов</button>
+              <button class="chip" data-q="Кто из покупателей нам должен и сколько?">Кто нам должен</button>
+            </div>
+            <div class="saved-reports" id="savedReports" hidden></div>
+          </div>
+          <!-- сюда добавляются сообщения -->
+          <div class="messages" id="messages"></div>
+        </div>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="composer" id="composer">
+          <textarea id="input" rows="1" placeholder="Спросите что-нибудь о базе…"></textarea>
+          <button class="send-btn" id="btnSend" title="Отправить" disabled>➤</button>
+        </div>
+        <div class="composer-foot">
+          <div class="composer-hint">Enter — отправить, Shift+Enter — новая строка. Ответы основаны на данных вашей базы.</div>
+          <button class="model-badge" id="modelBadge" title="Текущая модель ответа — нажмите, чтобы изменить"><span class="mb-dot"></span><span class="mb-name">—</span></button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Настройки: модалка с боковым меню разделов -->
+  <div class="settings-modal" id="settingsDrawer" hidden>
+    <div class="sm-backdrop" data-close="settings"></div>
+    <div class="sm-window">
+      <div class="sm-sidebar">
+        <div class="sm-title">Настройки</div>
+        <nav class="sm-nav" id="smNav">
+          <button class="sm-nav-item active" data-panel="bases"><span class="sm-ico">🗄</span> Базы 1С</button>
+          <button class="sm-nav-item" data-panel="ai"><span class="sm-ico">✦</span> Доступ к AI</button>
+          <button class="sm-nav-item" data-panel="skills"><span class="sm-ico">🧠</span> Навыки</button>
+          <button class="sm-nav-item" data-panel="knowledge"><span class="sm-ico">📖</span> Знания</button>
+          <button class="sm-nav-item" data-panel="files"><span class="sm-ico">📁</span> Файлы</button>
+          <button class="sm-nav-item" data-panel="appearance"><span class="sm-ico">🎨</span> Внешний вид</button>
+          <button class="sm-nav-item" data-panel="data"><span class="sm-ico">🗑</span> Данные</button>
+          <button class="sm-nav-item" data-panel="about"><span class="sm-ico">⟳</span> Обновления</button>
+        </nav>
+        <button class="sm-close-btn" data-close="settings">Закрыть</button>
+      </div>
+
+      <div class="sm-content">
+        <button class="sm-x" data-close="settings" title="Закрыть">✕</button>
+
+        <section class="sm-panel active" data-panel="bases">
+          <h3 class="sm-h">Базы 1С</h3>
+          <div class="set-hint">Выбранная база отвечает в чате. Зелёная точка — связь есть.</div>
+          <div id="baseList" class="base-list"></div>
+          <button class="btn btn-ghost btn-sm" id="btnAddBase">＋ Подключить другую базу</button>
+        </section>
+
+        <section class="sm-panel" data-panel="ai">
+          <h3 class="sm-h">Доступ к AI</h3>
+          <div class="ai-status" id="aiStatus">Проверяю…</div>
+
+          <div class="set-label">Движок ответа</div>
+          <div class="seg" id="segEngine">
+            <button data-v="api">Напрямую (API)</button>
+            <button data-v="claude-code">Через Claude Code</button>
+          </div>
+          <div class="know-status" id="ccNote"></div>
+          <p class="mini-note"><b>«Через Claude Code»</b> — приложение запускает установленный на этом ПК Claude Code, и сильные модели (Opus/Sonnet) работают <b>надёжно с подписки</b>, без ошибок лимита. Требуется установленный Claude Code с выполненным входом. <b>«Напрямую (API)»</b> — обычный режим: вход Claude с этого ПК или API‑ключ.</p>
+
+          <div class="set-label">Модель ответа</div>
+          <div class="seg" id="segModel">
+            <button data-v="claude-opus-5">Opus 5 · сильная</button>
+            <button data-v="claude-sonnet-5">Sonnet 5</button>
+            <button data-v="claude-haiku-4-5">Haiku · быстрая</button>
+          </div>
+          <div class="set-label">При лимите сильной модели</div>
+          <div class="seg" id="segOnLimit">
+            <button data-v="wait">Ждать сильную</button>
+            <button data-v="fallback">Быстро (Haiku)</button>
+          </div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnTestModels">Проверить модели</button>
+          </div>
+          <div class="upd-status" id="modelsResult"></div>
+          <p class="mini-note"><b>«Ждать сильную»</b> — приложение подождёт и ответит Opus/Sonnet под вашим входом Claude (как в подобных приложениях). Работает, если параллельно <b>НЕ запущен</b> Claude Code (иначе лимит подписки занят). <b>«Быстро»</b> — при занятости сразу отвечает Haiku. Для гарантированной работы у многих пользователей — API‑ключ (ниже).</p>
+
+          <details class="advanced">
+            <summary>Дополнительно (для администратора)</summary>
+            <label class="fld">
+              <span class="fld-label">API‑ключ Anthropic <span class="opt">(если выдан)</span></span>
+              <span class="pass-wrap">
+                <input type="password" id="setApiKey" placeholder="sk-ant-…" />
+                <button type="button" class="pass-eye" id="setApiKeyEye" title="Показать">&#128065;</button>
+              </span>
+            </label>
+            <p class="mini-note">Без ключа приложение использует вход Claude с этого компьютера. Ключ нужен для стабильной работы у многих пользователей.</p>
+            <div class="set-actions">
+              <button class="btn btn-ghost btn-sm" id="btnSaveApiKey">Сохранить ключ</button>
+              <button class="btn btn-ghost btn-sm" id="btnTestAuth">Проверить доступ</button>
+            </div>
+          </details>
+        </section>
+
+        <section class="sm-panel" data-panel="skills">
+          <h3 class="sm-h">Навыки работы с базой</h3>
+          <div class="set-hint">Инструкции, по которым ассистент строит запросы к 1С. Набор навыков — <b>свой для каждой базы</b>: включайте нужные под конкретную конфигурацию.</div>
+          <div class="know-status" id="skillsBaseNote"></div>
+          <div id="skillsList" class="skills-list"></div>
+          <div class="set-label">Папка с навыками (.md)</div>
+          <div class="path-row"><span class="path-val" id="skillsDirVal">—</span></div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnChangeSkillsDir">Выбрать папку…</button>
+            <button class="btn btn-ghost btn-sm" id="btnOpenSkills">Открыть папку</button>
+          </div>
+          <p class="mini-note">Свой навык — положите .md‑файл в эту папку (в начале: <code>--- name: … description: … ---</code>) и включите его здесь. Можно указать любую свою папку на компьютере.</p>
+        </section>
+
+        <section class="sm-panel" data-panel="knowledge">
+          <h3 class="sm-h">Знания о базе</h3>
+          <div class="set-hint">Ассистент накапливает знания <b>сам</b> — по мере изучения структуры и запросов. Писать ничего не нужно. Знания раздельные для каждой базы.</div>
+          <div class="know-status" id="knowStatus"></div>
+          <div class="set-label">Что ассистент узнал о базе</div>
+          <div class="learned-list" id="learnedList"></div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnCollectKnow">Собрать паспорт базы сейчас</button>
+          </div>
+          <div class="set-label">Справочные данные (ваша папка с .md/.txt)</div>
+          <div class="path-row"><span class="path-val" id="dataDirVal">не задано</span></div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnChangeDataDir">Выбрать папку…</button>
+            <button class="btn btn-ghost btn-sm" id="btnOpenDataDir">Открыть папку</button>
+            <button class="btn btn-ghost btn-sm" id="btnClearDataDir">Убрать</button>
+          </div>
+          <p class="mini-note">Файлы .md/.txt из этой папки ассистент читает как дополнительный контекст ко <b>всем</b> базам (описания счетов, регламенты, словарь терминов).</p>
+          <details class="advanced">
+            <summary>Добавить свою заметку (необязательно)</summary>
+            <p class="mini-note">Обычно не требуется — ассистент учится сам. Но если хотите подсказать что-то важное о базе, напишите здесь.</p>
+            <textarea id="userKnowledge" class="know-textarea" placeholder="Например: основная организация — ТОО «…»; продажи считать по счёту 6010…"></textarea>
+            <button class="btn btn-ghost btn-sm" id="btnSaveKnow">Сохранить заметку</button>
+          </details>
+          <p class="mini-note">Сбросить накопленные знания — в разделе «Данные».</p>
+        </section>
+
+        <section class="sm-panel" data-panel="files">
+          <h3 class="sm-h">Файлы (Excel, CSV)</h3>
+          <div class="set-hint">Сюда сохраняются файлы, которые создаёт ассистент.</div>
+          <div class="path-row"><span class="path-val" id="exportDirVal">—</span></div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnChangeDir">Изменить папку…</button>
+            <button class="btn btn-ghost btn-sm" id="btnOpenDir">Открыть папку</button>
+          </div>
+        </section>
+
+        <section class="sm-panel" data-panel="appearance">
+          <h3 class="sm-h">Внешний вид</h3>
+          <div class="set-label">Тема</div>
+          <div class="seg" id="segTheme">
+            <button data-v="light">Светлая</button>
+            <button data-v="dark">Тёмная</button>
+            <button data-v="system">Как в системе</button>
+          </div>
+          <div class="set-label">Размер текста</div>
+          <div class="seg" id="segFont">
+            <button data-v="normal">Обычный</button>
+            <button data-v="large">Крупный</button>
+          </div>
+        </section>
+
+        <section class="sm-panel" data-panel="data">
+          <h3 class="sm-h">Данные</h3>
+          <div class="set-actions">
+            <button class="btn btn-danger btn-sm" id="btnClearHistory">Очистить историю диалогов</button>
+            <button class="btn btn-danger btn-sm" id="btnResetKnowledge">Сбросить память о базе</button>
+          </div>
+          <p class="mini-note">История — сохранённые диалоги. Память о базе — то, что ассистент узнал о структуре (соберётся заново при следующем вопросе).</p>
+        </section>
+
+        <section class="sm-panel" data-panel="about">
+          <h3 class="sm-h">Обновления и о программе</h3>
+          <div class="mini-note">1С Ассистент, версия <span id="aboutVer"></span></div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnCheckUpdate">Проверить обновления</button>
+          </div>
+          <div class="upd-status" id="updStatus"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
