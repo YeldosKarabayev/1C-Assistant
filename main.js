@@ -98,16 +98,19 @@ ipcMain.handle('update:downloadAndInstall', async () => {
 ipcMain.handle('update:install', () => { setImmediate(() => autoUpdater.quitAndInstall(true, true)); });
 // Последний релиз с GitHub — для отображения версии и статуса (как в DevOps Studio).
 ipcMain.handle('update:latest', async () => {
+  // Версия из latest.yml релиза (загрузка с CDN, НЕ через GitHub API) — иначе на общем IP офиса
+  // неавторизованный API упирается в лимит 60/час и отдаёт HTTP 403.
+  const repo = 'YeldosKarabayev/1C-Assistant';
   try {
-    const res = await fetch('https://api.github.com/repos/YeldosKarabayev/1C-Assistant/releases/latest', {
-      headers: { Accept: 'application/vnd.github+json', 'User-Agent': '1C-Assistant' },
+    const res = await fetch(`https://github.com/${repo}/releases/latest/download/latest.yml`, {
+      headers: { 'User-Agent': '1C-Assistant' }, redirect: 'follow',
     });
-    if (!res.ok) {
-      return { ok: false, status: res.status, current: app.getVersion(), error: res.status === 404 ? 'Релиз не найден' : `HTTP ${res.status}` };
-    }
-    const j = await res.json();
-    const version = String(j.tag_name || '').replace(/^v/i, '');
-    return { ok: true, version, name: j.name, url: j.html_url, current: app.getVersion() };
+    if (!res.ok) return { ok: false, status: res.status, current: app.getVersion(), error: `HTTP ${res.status}` };
+    const text = await res.text();
+    const m = /(^|\n)version:\s*([0-9][0-9.]*)/i.exec(text);
+    const version = m ? m[2].trim() : '';
+    if (!version) return { ok: false, current: app.getVersion(), error: 'Версия не найдена в latest.yml' };
+    return { ok: true, version, url: `https://github.com/${repo}/releases`, current: app.getVersion() };
   } catch (e) {
     return { ok: false, current: app.getVersion(), error: String((e && e.message) || e) };
   }

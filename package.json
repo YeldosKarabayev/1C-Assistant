@@ -1,6 +1,6 @@
 {
   "name": "onec-assistant",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "1С Ассистент — простой чат с вашей базой 1С на понятном языке",
   "main": "main.js",
   "scripts": {
