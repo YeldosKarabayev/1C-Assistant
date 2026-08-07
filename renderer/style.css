@@ -377,3 +377,8 @@ body.screen-chat #screenConnect { display: none; }
 .msg .content th.sortable:hover { background: var(--accent-soft); }
 .msg .content th[data-sort="asc"]::after { content: ' ▲'; font-size: 9px; color: var(--accent); }
 .msg .content th[data-sort="desc"]::after { content: ' ▼'; font-size: 9px; color: var(--accent); }
+
+/* Раздел «Обновления» (как в DevOps Studio) */
+.upd-line { font-size: 13.5px; color: var(--ink); margin: 3px 0; }
+#btnInstallLatest { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+#btnInstallLatest:hover { filter: brightness(1.05); }

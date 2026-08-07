@@ -283,12 +283,16 @@
         </section>
 
         <section class="sm-panel" data-panel="about">
-          <h3 class="sm-h">Обновления и о программе</h3>
-          <div class="mini-note">1С Ассистент, версия <span id="aboutVer"></span></div>
-          <div class="set-actions">
-            <button class="btn btn-ghost btn-sm" id="btnCheckUpdate">Проверить обновления</button>
-          </div>
+          <h3 class="sm-h">Обновления</h3>
+          <div class="upd-line">Текущая версия: <b id="aboutVer">—</b></div>
+          <div class="upd-line">Последний релиз: <b id="latestVersion">…</b></div>
           <div class="upd-status" id="updStatus"></div>
+          <div class="set-actions">
+            <button class="btn btn-ghost btn-sm" id="btnCheckUpdate">Проверить</button>
+            <button class="btn btn-ghost btn-sm" id="btnOpenRelease">Страница релизов</button>
+            <button class="btn btn-sm" id="btnInstallLatest" hidden>Обновить</button>
+          </div>
+          <p class="mini-note">1С Ассистент — простой чат с вашей базой 1С.</p>
         </section>
       </div>
     </div>

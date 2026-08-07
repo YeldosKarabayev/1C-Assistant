@@ -96,6 +96,22 @@ ipcMain.handle('update:downloadAndInstall', async () => {
   } catch (e) { autoInstallRequested = false; return { ok: false, error: String(e && e.message || e) }; }
 });
 ipcMain.handle('update:install', () => { setImmediate(() => autoUpdater.quitAndInstall(true, true)); });
+// Последний релиз с GitHub — для отображения версии и статуса (как в DevOps Studio).
+ipcMain.handle('update:latest', async () => {
+  try {
+    const res = await fetch('https://api.github.com/repos/YeldosKarabayev/1C-Assistant/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json', 'User-Agent': '1C-Assistant' },
+    });
+    if (!res.ok) {
+      return { ok: false, status: res.status, current: app.getVersion(), error: res.status === 404 ? 'Релиз не найден' : `HTTP ${res.status}` };
+    }
+    const j = await res.json();
+    const version = String(j.tag_name || '').replace(/^v/i, '');
+    return { ok: true, version, name: j.name, url: j.html_url, current: app.getVersion() };
+  } catch (e) {
+    return { ok: false, current: app.getVersion(), error: String((e && e.message) || e) };
+  }
+});
 ipcMain.handle('app:openPath', async (_e, p) => { try { return await shell.openPath(p); } catch (e) { return String(e && e.message || e); } });
 ipcMain.handle('app:showInFolder', (_e, p) => { try { shell.showItemInFolder(p); } catch (_) {} });
 ipcMain.handle('app:chooseFolder', async () => {

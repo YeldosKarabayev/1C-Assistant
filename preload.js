@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('api', {
     check: () => ipcRenderer.invoke('update:check'),
     downloadAndInstall: () => ipcRenderer.invoke('update:downloadAndInstall'),
     install: () => ipcRenderer.invoke('update:install'),
+    latest: () => ipcRenderer.invoke('update:latest'),
     onStatus: (cb) => {
       const h = (_e, s) => cb(s);
       ipcRenderer.on('update:status', h);
